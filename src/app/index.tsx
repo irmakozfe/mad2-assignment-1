@@ -1,98 +1,209 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRef } from "react";
+import {
+    Animated,
+    Dimensions,
+    Image,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CARD_WIDTH = SCREEN_WIDTH * 0.68;
+const CARD_SPACING = 10;
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+const IMAGES = {
+  colombia: require("../../assets/colombia.png"),
+  brazil: require("../../assets/brazil.png"),
+  guatemala: require("../../assets/guatemala.png"),
+  ethiopia: require("../../assets/ethiopia.png"),
+  kenya: require("../../assets/kenya.png"),
+} as const;
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+type CountryKey = keyof typeof IMAGES;
+
+type Module = {
+  id: CountryKey;
+  title: string;
+  description: string;
+};
+
+const MODULES: Module[] = [
+  {
+    id: "colombia",
+    title: "Colombia",
+    description:
+      "Grown on volcanic slopes in the Andes at 1,200-2,000m. Washed process, medium roast. Notes of red apple, caramel and a clean, mild acidity.",
+  },
+
+  {
+    id: "brazil",
+    title: "Brazil Santos",
+    description:
+      "Sourced from the Cerrado plateau's low-altitude farms. Natural (dry) processed, giving it a heavy body, low acidity and notes of roasted nuts and dark chocolate.",
+  },
+  {
+    id: "guatemala",
+    title: "Guatemala",
+    description:
+      "Antigua Valley beans grown in mineral-rich volcanic soil at 1,500m+. Full-bodied with notes of cocoa, smoke and a subtle spice on the finish.",
+  },
+  {
+    id: "ethiopia",
+    title: "Ethiopia",
+    description:
+      "Considered the birthplace of coffee, from the Yirgacheffe and Sidamo highlands. Heirloom varietals, light roast. Floral, citrusy, and often compared to fine wine.",
+  },
+  {
+    id: "kenya",
+    title: "Kenya",
+    description:
+      "High-altitude beans (1,700m+) from the slopes near Mount Kenya. Double-fermented washed process yields a bright, wine-like acidity with blackcurrant and berry notes.",
+  },
+];
+
+export default function Index() {
+  const scrollX = useRef(new Animated.Value(0)).current;
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>Welcome to your local brewery.</Text>
+      <Text style={styles.secondaryheader}>
+        Choose your favourite coffee bean and brew it already!{" "}
+      </Text>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      <Animated.FlatList
+        data={MODULES}
+        keyExtractor={(item) => item.id}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={CARD_WIDTH + CARD_SPACING}
+        contentContainerStyle={styles.list}
+        decelerationRate="fast"
+        ItemSeparatorComponent={() => (
+          <View style={{ width: CARD_SPACING }}></View>
+        )}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
+        renderItem={({ item, index }) => {
+          const inputRange = [
+            (index - 1) * (CARD_WIDTH + CARD_SPACING),
+            index * (CARD_WIDTH + CARD_SPACING),
+            (index + 1) * (CARD_WIDTH + CARD_SPACING),
+          ];
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+          const scale = scrollX.interpolate({
+            inputRange,
+            outputRange: [0.92, 1, 0.92],
+            extrapolate: "clamp",
+          });
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          return (
+            <Animated.View
+              style={[
+                styles.card,
+                { width: CARD_WIDTH, transform: [{ scale }] },
+              ]}
+            >
+              <Image
+                source={IMAGES[item.id]}
+                style={styles.cardImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.cardTitle}>{item.title}</Text>
+              <Text style={styles.cardDescription}>{item.description}</Text>
+            </Animated.View>
+          );
+        }}
+      />
+      <Text style={styles.footer}>Freshly roasted, just for you </Text>
+      <Text style={styles.smallfooter}>contact us @mylocalbrewery</Text>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "#422D28",
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    paddingTop: 24,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+  header: {
+    color: "#F0E7D5",
+    fontSize: 50,
+    fontStyle: "italic",
+    fontFamily: "Helvetica",
+    textAlign: "center",
+    paddingHorizontal: 16,
+    marginTop: 40,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  secondaryheader: {
+    color: "#F0E7D5",
+    textAlign: "center",
+    fontFamily: "Helvetica",
+    fontSize: 13,
+    paddingHorizontal: 24,
+    marginTop: 15,
+    marginBottom: -10,
   },
-  title: {
-    textAlign: 'center',
+  listContent: {
+    paddingHorizontal: (SCREEN_WIDTH - CARD_WIDTH) / 2,
   },
-  code: {
-    textTransform: 'uppercase',
+  card: {
+    backgroundColor: "#B6CFE4",
+    borderRadius: 20,
+    padding: 18,
+    aspectRatio: 0.7,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  cardImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 10,
+  },
+  cardTitle: {
+    color: "#422D28",
+    fontSize: 20,
+    fontFamily: "Helvetica",
+    fontWeight: "600",
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  cardDescription: {
+    color: "#422D28",
+    fontFamily: "Helvetica",
+    fontStyle: "italic",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  list: {
+    marginTop: 70,
+    flexGrow: 0,
+  },
+  footer: {
+    color: "#F0E7D5",
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: "auto",
+    paddingBottom: 24,
+    opacity: 0.7,
+  },
+  smallfooter: {
+    color: "#F0E7D5",
+    fontSize: 10,
+    textAlign: "center",
+    marginTop: -12,
+    paddingBottom: 24,
+    opacity: 0.7,
   },
 });
