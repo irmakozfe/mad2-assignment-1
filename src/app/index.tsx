@@ -1,12 +1,14 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Image,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH * 0.68;
@@ -64,13 +66,19 @@ const MODULES: Module[] = [
 
 export default function Index() {
   const scrollX = useRef(new Animated.Value(0)).current;
+  const [email, setEmail] = useState("");
+
+  const handleSubscribe = () => {
+    console.log("submitted email:", email);
+    setEmail("");
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Welcome to your local brewery.</Text>
       <Text style={styles.secondaryheader}>
         Choose your favourite coffee bean and brew it already!{" "}
       </Text>
-
       <Animated.FlatList
         data={MODULES}
         keyExtractor={(item) => item.id}
@@ -118,8 +126,21 @@ export default function Index() {
           );
         }}
       />
-      <Text style={styles.footer}>Freshly roasted, just for you </Text>
-      <Text style={styles.smallfooter}>contact us @mylocalbrewery</Text>
+      <Text style={styles.footer}>Freshly roasted, just for you! </Text>
+      <View style={styles.subscribeRow}>
+        <TextInput
+          style={styles.emailInput}
+          placeholder="example@email.com"
+          placeholderTextColor="#B6A79E"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <Pressable style={styles.subscribeButton} onPress={handleSubscribe}>
+          <Text style={styles.subscribeButtonText}>Contact Us</Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
@@ -185,6 +206,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     fontSize: 14,
     lineHeight: 20,
+    marginTop: 8,
   },
   list: {
     marginTop: 70,
@@ -205,5 +227,32 @@ const styles = StyleSheet.create({
     marginTop: -12,
     paddingBottom: 24,
     opacity: 0.7,
+  },
+  subscribeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  emailInput: {
+    width: 160,
+    backgroundColor: "#F0E7D5",
+    borderRadius: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: "#422D28",
+    fontSize: 13,
+    opacity: 0.95,
+  },
+  subscribeButton: {
+    backgroundColor: "#B6CFE4",
+    borderRadius: 100,
+    paddingHorizontal: 15,
+    paddingVertical: 11,
+    justifyContent: "center",
+  },
+  subscribeButtonText: {
+    color: "#422D28",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });
